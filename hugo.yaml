@@ -1,4 +1,4 @@
-baseURL: https://ulaidotin.github.io/ulaidotin/
+baseURL: https://docs.ulai.co.in/
 title: ulaidotin
 
 enableRobotsTXT: true
@@ -23,7 +23,7 @@ markup:
     renderer:
       unsafe: true
     # Resolve root-relative content links (e.g. /docs/...) to page permalinks,
-    # so they keep working under the /ulaidotin/ GitHub Pages subpath.
+    # so they resolve correctly whatever the site's base path is.
     renderHooks:
       link:
         useEmbedded: always

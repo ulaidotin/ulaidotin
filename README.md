@@ -4,7 +4,7 @@ Sample documentation site built with [Hugo](https://gohugo.io) and the
 [Docsy](https://www.docsy.dev) theme (based on
 [google/docsy-example](https://github.com/google/docsy-example)).
 
-Live site: https://ulaidotin.github.io/ulaidotin/
+Live site: https://docs.ulai.co.in/
 
 ## Local development
 
@@ -12,7 +12,7 @@ Requires Hugo **extended** ≥ 0.160.1, Go, and Node.js.
 
 ```sh
 npm install
-npm run serve   # http://localhost:1313/ulaidotin/
+npm run serve   # http://localhost:1313/
 npm run build   # outputs to ./public
 ```
 
