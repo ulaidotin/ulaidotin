@@ -1,0 +1,98 @@
+baseURL: https://ulaidotin.github.io/ulaidotin/
+title: ulaidotin
+
+enableRobotsTXT: true
+# Gives values to .Lastmod etc. (requires full git history in CI).
+enableGitInfo: true
+
+taxonomies:
+  tag: tags
+  category: categories
+
+permalinks:
+  blog: /:section/:year/:month/:day/:slugorcontentbasename
+
+imaging:
+  resampleFilter: CatmullRom
+
+markup:
+  goldmark:
+    parser:
+      attribute:
+        block: true
+    renderer:
+      unsafe: true
+    # Resolve root-relative content links (e.g. /docs/...) to page permalinks,
+    # so they keep working under the /ulaidotin/ GitHub Pages subpath.
+    renderHooks:
+      link:
+        useEmbedded: always
+      image:
+        useEmbedded: always
+  highlight:
+    style: tango
+    noClasses: false # Required for dark-mode support of code blocks
+
+outputs:
+  home: [HTML, print, RSS]
+  section: [HTML, print, RSS]
+
+params:
+  description: A Docsy sample site for ulaidotin
+
+  taxonomy:
+    taxonomyCloud: [tags, categories]
+    taxonomyCloudTitle: [Tag Cloud, Categories]
+    taxonomyPageHeader: [tags, categories]
+
+  version: 0.17.1
+
+  github_repo: https://github.com/ulaidotin/ulaidotin
+  github_branch: main
+
+  # Lunr.js offline search (no external search service needed).
+  offlineSearch: true
+
+  prism_syntax_highlighting: false
+
+  copyright:
+    authors: ulaidotin | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0) |
+    from_year: 2026
+    to_year: present
+
+  ui:
+    breadcrumb_disable: false
+    navbar_logo: true
+    navbar_translucent_over_cover_disable: false
+    sidebar_menu_foldable: true
+    sidebar_menu_compact: false
+    sidebar_search_disable: false
+    showLightDarkModeMenu: true
+    feedback:
+      enable: false
+    readingtime:
+      enable: false
+
+  # Docs helpers: use with _param
+  btn-lg: class="btn btn-lg btn-{1}" role="button"
+  FA: <i class="fa-{1} fa-{2} text-{3} px-1"></i>
+
+  links:
+    user:
+      - name: GitHub
+        url: https://github.com/ulaidotin
+        icon: fab fa-github
+        desc: Follow ulaidotin on GitHub
+    developer:
+      - name: GitHub
+        url: https://github.com/ulaidotin/ulaidotin
+        icon: fab fa-github
+        desc: Development takes place here!
+
+module:
+  hugoVersion:
+    extended: true
+    min: 0.160.1
+  imports:
+    - path: github.com/google/docsy/theme
+      disable: false
