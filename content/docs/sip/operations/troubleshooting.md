@@ -118,20 +118,3 @@ A mid-call re-INVITE handled as a new call produces exactly this — a second
 agent, a second model session, a second billing row. In-dialog INVITEs are
 handled separately for that reason. If you see it, capture the SIP flow and
 check whether the second invocation followed a re-INVITE from the carrier's SBC.
-
-## Getting a build to work
-
-```text
-go: github.com/ulaidotin/ulai-go-sdk@…: … Permission denied (publickey)
-```
-
-The two private modules need SSH. Locally:
-
-```sh
-export GOPRIVATE=github.com/ulaidotin/*
-git config --global url."ssh://git@github.com/".insteadOf "https://github.com/"
-```
-
-In Docker, forward the agent: `DOCKER_BUILDKIT=1 docker build --ssh default …`.
-In CI, load *both* keys — the repo key and the module key — into the agent; the
-clone succeeding tells you nothing about whether the build will.

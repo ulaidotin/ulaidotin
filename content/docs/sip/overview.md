@@ -70,10 +70,10 @@ Three external dependencies, all required:
 
 ## Why a separate service
 
-The SIP stack and the room gateway are deliberately separate packages that
-share no dependencies: `internal/telephony` links no WebRTC, and
-`internal/sfugw` links no SIP. The only native dependency in the whole binary
-is **libopus**, because there is no production-grade pure-Go Opus encoder. Every
+The SIP stack and the room gateway share no dependencies: the SIP side links
+no WebRTC, and the room side links no SIP. That keeps the binary — and the
+image — small, and it is why the only native dependency in the whole thing is
+**libopus**, because there is no production-grade pure-Go Opus encoder. Every
 other piece of the audio path — resampling, μ-law/A-law, RTP, SDP, SRTP — is
 pure Go.
 

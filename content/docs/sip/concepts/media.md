@@ -7,7 +7,7 @@ weight: 3
 ## The audio path
 
 The carrier speaks 8 kHz G.711. The SFU speaks 48 kHz Opus. Everything between
-the two is `internal/sfugw`:
+the two happens inside the gateway:
 
 ```text
 uplink   caller μ-law 8k ─decode─▶ PCM 8k ─resample─▶ PCM 48k ─encode─▶ Opus ─▶ room

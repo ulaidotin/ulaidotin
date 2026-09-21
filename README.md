@@ -22,7 +22,7 @@ All documentation lives under `content/docs/`:
 | Path | Covers |
 | --- | --- |
 | `overview.md` | What the gateway is and where it sits |
-| `getting-started/` | Prerequisites, build, first inbound and outbound call |
+| `getting-started/` | Running the image, first inbound and outbound call |
 | `concepts/` | Call flows, routing plane, media pipeline |
 | `configuration.md` | Every environment variable and built-in timeout |
 | `http-api.md` | `/health`, `/calls`, `/sip/originate` |

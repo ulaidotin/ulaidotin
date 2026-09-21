@@ -1,12 +1,40 @@
 ---
 title: Getting started
-description: Build it, configure it, and put a call through it.
+description: Run the image and put a call through it.
 weight: 2
 ---
 
-## Quickest path: the published image
+The gateway ships as a container image. There is nothing to compile and nothing
+to install on the host beyond Docker.
 
-If you only want a running gateway, skip the build entirely:
+## What you need
+
+| Requirement | Why |
+| --- | --- |
+| A host with a routable public IP | It is advertised to the carrier in SDP and `Contact`, and media is streamed to it |
+| Docker, with host networking available | The RTP range cannot be published through a proxy — see [networking](/docs/sip/operations/networking/) |
+| A control-plane URL | Rooms are created and joined there |
+| A routing store URL (Redis) | Every call is resolved against it |
+| A SIP trunk configured in the routing store | Inbound numbers, outbound termination, or both |
+| A control-plane API key | Required for `POST /sip/originate` |
+
+Ports that must be reachable from the carrier: **5060** (UDP, TCP or TLS) for
+signalling and **10000–10500** (UDP) for media. Opening the first without the
+second gives you calls that connect and then have no audio.
+
+## Pull the image
+
+```sh
+docker pull asia-south1-docker.pkg.dev/arctic-operand-415316/ulai/sip:v6
+```
+
+If the registry is private, authenticate first:
+
+```sh
+gcloud auth configure-docker asia-south1-docker.pkg.dev
+```
+
+## Run it
 
 ```sh
 docker run -d --name ulai-sip \
@@ -23,102 +51,57 @@ docker run -d --name ulai-sip \
   asia-south1-docker.pkg.dev/arctic-operand-415316/ulai/sip:v6
 ```
 
-`SIP_PUBLIC_IP` must be the host's own routable address — it is what the carrier
-is told to stream media to. `--network host` is required; publishing the RTP
-range with `-p` spawns hundreds of userland proxies **and** makes every INVITE
-arrive from the bridge gateway's address, which the trunk ACL then rejects with
-`403`. See [networking](/docs/sip/operations/networking/).
+Three things in that command are load-bearing:
 
-Then jump to [check it](#check-it). The rest of this page builds from source.
+- **`--network host`** is required. Publishing the RTP range with `-p` spawns
+  hundreds of userland proxies **and** makes every INVITE arrive from the bridge
+  gateway's address, which the trunk's IP ACL then rejects with `403`.
+- **`SIP_PUBLIC_IP`** must be the host's own routable address. It is what every
+  SDP tells the carrier to stream media to, which is why `0.0.0.0` is rejected
+  at startup.
+- **`SIP_RTP_HOST=0.0.0.0`** is what the RTP sockets *bind* to. On most cloud
+  VMs the public IP is attached at a NAT or load-balancer layer and is not on
+  any interface inside the VM, so binding to it fails outright.
 
-## Prerequisites
-
-| Requirement | Why |
-| --- | --- |
-| Go 1.26+ with cgo enabled | `libopus` is linked natively |
-| `libopus` development headers | Opus encode/decode for the room side |
-| A reachable public IP | Advertised to the carrier in SDP and `Contact` |
-| An Ulai control plane URL | Rooms are created and joined there |
-| A routing store (Redis) | Every call is resolved against it |
-| A SIP trunk | Inbound numbers, outbound termination, or both |
-
-On Debian/Ubuntu:
+Keep secrets out of the host's process list with an env file instead:
 
 ```sh
-sudo apt-get install -y gcc pkg-config libopus-dev libopusfile-dev
+docker run -d --name ulai-sip --network host \
+  --env-file /etc/ulai/sip.env \
+  asia-south1-docker.pkg.dev/arctic-operand-415316/ulai/sip:v6
 ```
 
-On macOS:
-
 ```sh
-brew install opus pkg-config
-```
-
-The gateway depends on two private modules — `ulai-go-sdk` and
-`ulai-sip-resolver` — so `go mod download` needs SSH access to
-`github.com/ulaidotin`:
-
-```sh
-export GOPRIVATE=github.com/ulaidotin/*
-git config --global url."ssh://git@github.com/".insteadOf "https://github.com/"
-```
-
-## Build
-
-```sh
-git clone git@github.com:ulaidotin/ulai-sip-module.git
-cd ulai-sip-module
-CGO_ENABLED=1 go build -o sip-gateway .
-```
-
-Or build the container, which bakes in libopus and the health check:
-
-```sh
-DOCKER_BUILDKIT=1 docker build --ssh default -f Dockerfile.sip -t ulai-sip .
-```
-
-`--ssh default` is required: the build fetches the two private modules.
-
-## Configure
-
-Copy `.env.example` and fill in the three required values:
-
-```sh
+# /etc/ulai/sip.env
 ULAI_CONTROL_PLANE_URL=https://stgcp.ulai.co.in
-SIP_ROUTING_REDIS_URL=redis://user:password@redis.example.com:6379/0
-SIP_PUBLIC_IP=203.0.113.10
-
+SIP_ROUTING_REDIS_URL=redis://USER:PASSWORD@redis.ulai.co.in:6379
+SIP_PUBLIC_IP=148.113.58.51
 SIP_LISTEN_ADDR=0.0.0.0:5060
 SIP_TRANSPORT=udp
+SIP_RTP_HOST=0.0.0.0
 SIP_RTP_PORT_LOW=10000
 SIP_RTP_PORT_HIGH=10500
 SIP_HTTP_PORT=8082
 ```
 
-Every knob, with its default, is in the [configuration
-reference](/docs/sip/configuration/).
+Only three variables are genuinely required — `ULAI_CONTROL_PLANE_URL`,
+`SIP_ROUTING_REDIS_URL` and `SIP_PUBLIC_IP`. Everything else has a default.
+Every knob is in the [configuration reference](/docs/sip/configuration/).
 
-{{% alert title="SIP_PUBLIC_IP is not a listen address" color="warning" %}}
-It is what every SDP the gateway sends tells the carrier to stream media to.
-`0.0.0.0` is rejected at startup for exactly that reason. Use `SIP_RTP_HOST` if
-you need to control what the RTP sockets *bind* to — on most cloud VMs the
-public IP is not attached to any interface, so the default `0.0.0.0` is correct.
-{{% /alert %}}
-
-## Run
-
-```sh
-./sip-gateway
-```
+## Check it
 
 A healthy start looks like this:
+
+```sh
+docker logs ulai-sip
+```
 
 ```text
 [runtime] GOMAXPROCS=4 (cgroup CPU quota=4.00, host cores=8)
 [runtime] GOMEMLIMIT=3481MiB (cgroup limit=4096MiB, 85%)
 [runtime] GOGC=200
 routing store reachable
-sip-sfu-gateway: SIP listening on 0.0.0.0:5060/udp public=203.0.113.10 rtp=10000-10500 rtp_timeout=30s
+sip-sfu-gateway: SIP listening on 0.0.0.0:5060/udp public=148.113.58.51 rtp=10000-10500 rtp_timeout=30s
 sip-sfu-gateway: HTTP listening on :8082 (control plane https://stgcp.ulai.co.in, ice_servers=1)
 ```
 
@@ -131,7 +114,7 @@ WARNING: routing store unreachable (...) — every call will be rejected until i
 That is deliberate — a listener that answers with an honest `500` is worth more
 than one that is not there at all.
 
-## Check it
+Then the two endpoints:
 
 ```sh
 curl -s localhost:8082/health
@@ -141,10 +124,11 @@ curl -s localhost:8082/calls
 # {"live":[]}
 ```
 
-And the SIP leg, which `/health` says nothing about:
+`/health` says nothing about the SIP leg. Check that separately — the image
+ships `sipsak` for exactly this:
 
 ```sh
-sipsak -s sip:healthcheck@127.0.0.1:5060
+docker exec ulai-sip sipsak -s sip:healthcheck@127.0.0.1:5060
 ```
 
 ## Your first inbound call
@@ -214,8 +198,18 @@ phone is still ringing. Point an agent or a browser at `session_id` while it
 does. The room is only *joined* once the callee actually answers, so nothing
 greets a ringtone.
 
+## Stopping it
+
+`SIGTERM` starts a drain, not a kill: new calls are refused, in-flight calls get
+up to 60 seconds to finish, and anything left is then cancelled with 5 seconds
+of grace. Give Docker a matching timeout so it does not `SIGKILL` through it:
+
+```sh
+docker stop --time 70 ulai-sip
+```
+
 ## Where to go next
 
 - [Concepts](/docs/sip/concepts/) — what happens between the INVITE and the audio.
 - [HTTP API](/docs/sip/http-api/) — the full request and response shapes.
-- [Operations](/docs/sip/operations/) — how to deploy it without breaking media.
+- [Operations](/docs/sip/operations/) — networking, observability, troubleshooting.

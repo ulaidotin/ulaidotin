@@ -1,10 +1,13 @@
 ---
 title: Deployment
-description: Container, compose, and the CI pipeline.
+description: Running the image on a host.
 weight: 1
 ---
 
-## Run the published image
+The gateway is distributed as a container image. A deployment is one container
+on a host with a routable public IP, run with host networking.
+
+## docker run
 
 ```sh
 docker run -d --name ulai-sip \
@@ -41,68 +44,65 @@ docker run -d --name ulai-sip --network host \
   asia-south1-docker.pkg.dev/arctic-operand-415316/ulai/sip:v6
 ```
 
-## Build the image
-
-```sh
-DOCKER_BUILDKIT=1 docker build --ssh default -f Dockerfile.sip -t ulai-sip .
-```
-
-`--ssh default` is required: `ulai-go-sdk` and `ulai-sip-resolver` are private
-modules fetched under `GOPRIVATE` during `go mod download`. Without a forwarded
-key the build fails with *Permission denied (publickey)* even when the repo
-clone succeeded.
-
-The image is a two-stage build — `golang:1.26-bookworm` with `libopus-dev`, then
-`debian:bookworm-slim` with `libopus0`, `ca-certificates`, `curl` and `sipsak`.
-It runs as an unprivileged user (`sipgw`, uid 10001): SIP `5060` and the RTP
-range are unprivileged ports, so nothing here needs root.
-
-`CGO_ENABLED=1` stays because of libopus, and only libopus — the resampler,
-G.711 codecs, SIP, SDP and RTP are all pure Go, which is also why the image is
-no longer pinned to `amd64`.
-
 ## docker compose
 
-`docker-compose.yml` reads a `.env` file and publishes the ports explicitly.
-It is convenient for a single-tenant VM where the environment is already
-written out by CI — but read
-[networking](/docs/sip/operations/networking/#port-publishing-versus-host-networking)
-before using the published-port form in production.
+```yaml
+services:
+  sip-gateway:
+    image: asia-south1-docker.pkg.dev/arctic-operand-415316/ulai/sip:v6
+    container_name: ulai-sip
+    network_mode: host
+    env_file:
+      - .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "./health-check.sh"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+```
+
+`network_mode: host` replaces a `ports:` block — the container binds the host's
+ports directly, which is the only arrangement that keeps the carrier's source
+address intact and the RTP range usable.
 
 ```sh
-docker compose build --no-cache
 docker compose up -d
 docker compose logs -f
 ```
 
-Ports come from the `SERVICE_SIP_*` variables:
+## What the image contains
+
+A Debian slim runtime with the gateway binary, `libopus`, `ca-certificates`,
+and `curl` plus `sipsak` for the health check. It runs as an unprivileged user
+(`sipgw`, uid 10001) — SIP `5060` and the RTP range are unprivileged ports, so
+nothing here needs root.
+
+Exposed ports:
+
+| Port | Protocol | Purpose |
+| --- | --- | --- |
+| `8082` | TCP | HTTP API |
+| `5060` | UDP, TCP | SIP signalling |
+| `10000–10500` | UDP | RTP media |
+
+## Upgrading
+
+Pull the new tag, then replace the container. There is no state on disk — every
+call is in memory and every routing decision is read fresh — so a replacement is
+a restart, not a migration:
 
 ```sh
-APP_NAME=ulai-sip-gateway
-APP_ENV=dev
-SERVICE_SIP_PORT=5060
-SERVICE_SIP_RTP_PORT_LOW=10000
-SERVICE_SIP_RTP_PORT_HIGH=10500
-SERVICE_SIP_HTTP_PORT=8082
+docker pull asia-south1-docker.pkg.dev/arctic-operand-415316/ulai/sip:v7
+docker stop --time 70 ulai-sip
+docker rm ulai-sip
+docker run -d --name ulai-sip --network host --env-file /etc/ulai/sip.env \
+  asia-south1-docker.pkg.dev/arctic-operand-415316/ulai/sip:v7
 ```
 
-## CI
-
-`.github/workflows/deploy.yml` deploys on every push to `prod` or `staging`, and
-on manual dispatch:
-
-1. The branch picks the environment — `prod` → production, `staging` → staging —
-   and the deploy directory under `~/apps/`.
-2. It SSHes to the VM, pulls the branch, and writes `.env` from repository
-   secrets.
-3. `docker compose build --no-cache`, `down -v`, `up -d`, then `docker system
-   prune -a -f`.
-4. It verifies **both** legs — `curl /health` and a `sipsak` OPTIONS ping — and
-   dumps the last 50 log lines and fails the job if either is down.
-
-Two SSH keys are involved: one to clone the repo, and one with read access to
-the private Go modules pulled during the image build. Forwarding only the first
-gets you a successful clone followed by a failed build.
+Live calls do not survive the replacement beyond the drain window below, so
+prefer a quiet period — or run a second host and move the trunk across.
 
 ## Restart and shutdown
 
