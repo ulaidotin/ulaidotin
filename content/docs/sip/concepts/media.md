@@ -1,7 +1,7 @@
 ---
 title: Media pipeline
 description: Codecs, SRTP, jitter, DTMF, and the ways a call ends without a BYE.
-weight: 4
+weight: 3
 ---
 
 ## The audio path

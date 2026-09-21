@@ -1,7 +1,7 @@
 ---
 title: Call flows
 description: The ordered steps of an inbound and an outbound call — and why the orders differ.
-weight: 2
+weight: 1
 ---
 
 Both legs end in the same place: a `bridgedCall` handed to `sfugw.Run`, which

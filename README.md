@@ -23,11 +23,10 @@ All documentation lives under `content/docs/`:
 | --- | --- |
 | `overview.md` | What the gateway is and where it sits |
 | `getting-started/` | Prerequisites, build, first inbound and outbound call |
-| `concepts/` | Architecture, call flows, routing plane, media pipeline |
+| `concepts/` | Call flows, routing plane, media pipeline |
 | `configuration.md` | Every environment variable and built-in timeout |
 | `http-api.md` | `/health`, `/calls`, `/sip/originate` |
 | `operations/` | Deployment, networking, observability, troubleshooting |
-| `development.md` | Repo layout, tests, contribution workflow |
 
 ## Deployment
 

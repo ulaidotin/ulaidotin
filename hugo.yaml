@@ -38,9 +38,7 @@ outputs:
   section: [HTML, print, RSS]
 
 params:
-  description: >-
-    Documentation for the Ulai SIP Gateway — SIP trunks in, Ulai SFU voice
-    rooms out.
+  description: Documentation for Ulai's modules.
 
   # No tagged content yet; empty lists switch the taxonomy UI off entirely.
   taxonomy:

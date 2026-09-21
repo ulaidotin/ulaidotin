@@ -58,13 +58,11 @@ curl -X POST http://148.113.58.51:8082/sip/originate \
   where it sits in the platform.
 - **[Getting started](/docs/sip/getting-started/)** — prerequisites, build,
   configuration, and your first inbound and outbound call.
-- **[Concepts](/docs/sip/concepts/)** — architecture, call flows, the routing
-  plane, and the media pipeline.
+- **[Concepts](/docs/sip/concepts/)** — call flows, the routing plane, and the
+  media pipeline.
 - **[Configuration](/docs/sip/configuration/)** — every environment variable and
   built-in timeout.
 - **[HTTP API](/docs/sip/http-api/)** — `/health`, `/calls` and
   `/sip/originate`.
 - **[Operations](/docs/sip/operations/)** — deployment, networking,
   observability and troubleshooting.
-- **[Development](/docs/sip/development/)** — repo layout, tests, and how to
-  change it.

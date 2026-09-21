@@ -1,7 +1,7 @@
 ---
 title: Routing plane
 description: How a call is admitted, how a trunk is resolved, and what gets published.
-weight: 3
+weight: 2
 ---
 
 Everything the gateway knows about numbers, trunks and agents comes from
