@@ -1,21 +1,15 @@
 ---
-title: ulaidotin
-description: Porridge temperature assessment &mdash; in the cloud!
+title: Ulai SIP Gateway
+description: SIP trunks in, Ulai SFU voice rooms out.
 params:
   body_class: td-navbar-links-all-active
 ---
 
 {{% blocks/cover
-  title="Welcome to ulaidotin"
+  title="Ulai SIP Gateway"
   height="full td-below-navbar"
   image_anchor="top"
 %}}
-
-<!--
-  Want a cover without an image?
-  Add the following argument to the blocks/cover shortcode:
-    color="primary bg-gradient td-below-navbar"
--->
 
 <!-- prettier-ignore -->
 {{% _param description %}}
@@ -24,10 +18,10 @@ params:
 <!-- prettier-ignore -->
 <div class="td-cta-buttons my-5">
   <a {{% _param btn-lg primary %}} href="docs/">
-    Learn more
+    Read the docs
   </a>
   <a {{% _param btn-lg secondary %}}
-    href="{{% param github_repo %}}"
+    href="{{% param github_project_repo %}}"
     target="_blank" rel="noopener noreferrer">
     Get the code
     {{% _param FA brands github "" %}}
@@ -40,54 +34,63 @@ params:
 
 {{% blocks/lead color="white" %}}
 
-Goldydocs provides a single web UI providing visibility into porridge
-temperature, chair size, and bed softness metrics! You can even find out who's
-been eating **your** porridge.
-
-(Sadly, Goldydocs isn't a real project, but you can use this site as an example
-to create your own real websites with [Docsy](https://docsy.dev))
+One Go service that puts a phone call into an Ulai SFU room. A carrier's
+INVITE is routed, admitted and answered; an API call dials out through a
+trunk. Either way the caller ends up as an ordinary WebRTC participant
+talking to whoever else is in the room — a browser, or an AI agent.
 
 {{% /blocks/lead %}}
 
 {{% blocks/section color="primary" type="row" %}}
 
-{{% blocks/feature title="New chair metrics!" icon="fa-lightbulb" %}}
+{{% blocks/feature title="Inbound" icon="fa-phone-volume" url="/docs/sip/concepts/call-flows/#inbound" %}}
 
-The Goldydocs UI now shows chair size metrics by default.
+A carrier INVITE is resolved against the routing store — domain, dialled
+number and source IP — then answered, published as `CALL_ANSWERED`, and
+bridged into a room created for it.
 
-Please follow this space for updates!
+{{% /blocks/feature %}}
+
+{{% blocks/feature title="Outbound" icon="fa-tower-broadcast" url="/docs/sip/http-api/" %}}
+
+`POST /sip/originate` takes a number and a trunk id. Host, transport and
+digest credentials come from the routing store, never from the request.
 
 {{% /blocks/feature %}}
 
 {{% blocks/feature
-  title="Contributions welcome!" icon="fab fa-github"
-  url="https://github.com/google/docsy-example"
+  title="Source on GitHub" icon="fab fa-github"
+  url="https://github.com/ulaidotin/ulai-sip-module"
 %}}
 
-We do a [Pull Request](https://github.com/google/docsy-example/pulls)
-contributions workflow on **GitHub**. New users are always welcome!
-
-{{% /blocks/feature %}}
-
-{{% blocks/feature
-  title="Follow us on X!" icon="fab fa-x-twitter"
-  url="https://x.com/docsydocs"
-%}}
-
-For announcement of latest features etc.
+Go 1.26, sipgo for signalling, pion for WebRTC and SRTP, one cgo
+dependency (libopus) for the room side of the audio path.
 
 {{% /blocks/feature %}}
 
 {{% /blocks/section %}}
 
-{{% blocks/section color="white" type="row text-center h1" %}}
+{{% blocks/section color="white" type="row" %}}
 
-This is the second section
+{{% blocks/feature title="μ-law in, Opus out" icon="fa-wave-square" url="/docs/sip/concepts/media/" %}}
 
-{{% /blocks/section %}}
+8 kHz G.711 from the carrier is decoded, resampled to 48 kHz and encoded
+to Opus for the room — and back again, mixed, on the way down.
 
-{{% blocks/section color="secondary" type="row text-center h1" %}}
+{{% /blocks/feature %}}
 
-This is the another section with center alignment
+{{% blocks/feature title="Configuration" icon="fa-sliders" url="/docs/sip/configuration/" %}}
+
+Three required environment variables, a routing store, and a public IP the
+carrier can actually reach.
+
+{{% /blocks/feature %}}
+
+{{% blocks/feature title="Running it" icon="fa-server" url="/docs/sip/operations/" %}}
+
+Host networking, an RTP port range, a drain on shutdown, and the two
+health checks that tell you both legs are alive.
+
+{{% /blocks/feature %}}
 
 {{% /blocks/section %}}

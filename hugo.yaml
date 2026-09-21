@@ -1,5 +1,5 @@
 baseURL: https://docs.ulai.co.in/
-title: ulaidotin
+title: Ulai Docs
 
 enableRobotsTXT: true
 # Gives values to .Lastmod etc. (requires full git history in CI).
@@ -38,17 +38,22 @@ outputs:
   section: [HTML, print, RSS]
 
 params:
-  description: A Docsy sample site for ulaidotin
+  description: >-
+    Documentation for the Ulai SIP Gateway — SIP trunks in, Ulai SFU voice
+    rooms out.
 
+  # No tagged content yet; empty lists switch the taxonomy UI off entirely.
   taxonomy:
-    taxonomyCloud: [tags, categories]
-    taxonomyCloudTitle: [Tag Cloud, Categories]
-    taxonomyPageHeader: [tags, categories]
+    taxonomyCloud: []
+    taxonomyCloudTitle: []
+    taxonomyPageHeader: []
 
-  version: 0.17.1
-
+  # This site's own repo — drives the "Edit this page" links.
   github_repo: https://github.com/ulaidotin/ulaidotin
   github_branch: main
+
+  # The project being documented — drives "Create project issue".
+  github_project_repo: https://github.com/ulaidotin/ulai-sip-module
 
   # Lunr.js offline search (no external search service needed).
   offlineSearch: true
@@ -56,7 +61,7 @@ params:
   prism_syntax_highlighting: false
 
   copyright:
-    authors: ulaidotin | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0) |
+    authors: Ulai | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0) |
     from_year: 2026
     to_year: present
 
@@ -78,16 +83,15 @@ params:
   FA: <i class="fa-{1} fa-{2} text-{3} px-1"></i>
 
   links:
-    user:
-      - name: GitHub
-        url: https://github.com/ulaidotin
-        icon: fab fa-github
-        desc: Follow ulaidotin on GitHub
     developer:
-      - name: GitHub
+      - name: SIP Gateway on GitHub
+        url: https://github.com/ulaidotin/ulai-sip-module
+        icon: fab fa-github
+        desc: Source for the gateway documented here
+      - name: Docs on GitHub
         url: https://github.com/ulaidotin/ulaidotin
         icon: fab fa-github
-        desc: Development takes place here!
+        desc: Source for this site
 
 module:
   hugoVersion:

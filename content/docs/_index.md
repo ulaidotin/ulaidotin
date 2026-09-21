@@ -2,28 +2,24 @@
 title: Documentation
 linkTitle: Docs
 menu: { main: { weight: 20 } }
+weight: 20
 ---
 
-{{% pageinfo color="warning td-max-width-on-larger-screens mx-0" %}}
+Ulai is built from independent modules. Each one is documented on its own, with
+its own configuration, API and operational notes.
 
-This is a placeholder page. Replace it with your own content.
+## Modules
 
-{{% /pageinfo %}}
+{{% alert title="SIP Gateway" color="primary" %}}
+**[ulai-sip-module](/docs/sip/)** — connects SIP telephony to Ulai SFU voice
+rooms. Answers calls a carrier sends to it, places calls through a configured
+trunk, and bridges the audio of either into a room where an agent or a browser
+is waiting.
 
-This section is where the user documentation for your project lives - all the
-information your users need to understand and successfully use your project.
+[Overview](/docs/sip/overview/) ·
+[Getting started](/docs/sip/getting-started/) ·
+[Configuration](/docs/sip/configuration/) ·
+[HTTP API](/docs/sip/http-api/)
+{{% /alert %}}
 
-For large documentation sets we recommend adding content under the headings in
-this section, though if some or all of them don’t apply to your project feel
-free to remove them or add your own. For a smaller example, see the
-[Docsy User Guide](https://docsy.dev/docs/), built from the
-[`docsy.dev`](https://github.com/google/docsy/tree/main/docsy.dev) directory of
-the Docsy monorepo.
-
-Other content such as marketing material, case studies, and community updates
-should live in the [About](/about/) and [Community](/community/) pages.
-
-Find out how to use the Docsy theme in the
-[Docsy User Guide](https://docsy.dev/docs/). You can learn more about how to
-organize your documentation (and how we organized this site) in
-[Organizing Your Content](https://docsy.dev/docs/best-practices/organizing-content/).
+More modules are documented here as they land.

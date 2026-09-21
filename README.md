@@ -1,8 +1,7 @@
 # ulaidotin
 
-Sample documentation site built with [Hugo](https://gohugo.io) and the
-[Docsy](https://www.docsy.dev) theme (based on
-[google/docsy-example](https://github.com/google/docsy-example)).
+Documentation site for the [Ulai SIP Gateway](https://github.com/ulaidotin/ulai-sip-module),
+built with [Hugo](https://gohugo.io) and the [Docsy](https://www.docsy.dev) theme.
 
 Live site: https://docs.ulai.co.in/
 
@@ -15,6 +14,20 @@ npm install
 npm run serve   # http://localhost:1313/
 npm run build   # outputs to ./public
 ```
+
+## Content layout
+
+All documentation lives under `content/docs/`:
+
+| Path | Covers |
+| --- | --- |
+| `overview.md` | What the gateway is and where it sits |
+| `getting-started/` | Prerequisites, build, first inbound and outbound call |
+| `concepts/` | Architecture, call flows, routing plane, media pipeline |
+| `configuration.md` | Every environment variable and built-in timeout |
+| `http-api.md` | `/health`, `/calls`, `/sip/originate` |
+| `operations/` | Deployment, networking, observability, troubleshooting |
+| `development.md` | Repo layout, tests, contribution workflow |
 
 ## Deployment
 
