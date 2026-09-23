@@ -1,82 +1,42 @@
 ---
 title: The agent profile
-description: Everything about how a call runs, travelling with the call.
+description: Everything about how a call runs, sent by the client.
 weight: 1
 ---
 
-The profile is the whole configuration of one call: what the agent says, which
-voice says it, which AI project pays for it, and which behaviours are on.
+Almost nothing about a conversation is configured on the agent server. The
+prompt, the voice, the GCP project, the service-account key, which behaviours
+are on — all of it arrives with each call, in something called the **agent
+profile**, sent by the agent client.
 
-Send it and the server needs **no database**. Everything it would have looked
-up arrived with the request. That is what lets the engine run as a process with
-no storage of its own, and what lets the logic that owns agent configuration be
-written in any language against any store.
+This matters to you as an operator for three reasons.
 
-## Why it is not environment
+## 1. It explains the short environment list
 
-As environment, these settings pin one deployment to one tenant. An operator
-running agents for two customers — each billed to their own GCP account, each
-possibly on a different AI vendor — had no way to say so, and no fix short of a
-second deployment.
+You are not missing settings. There is no `PROMPT`, no `VOICE`, no
+`GEMINI_MODEL` to set here, because those are properties of an *agent*, not of
+a *host*. One agent server runs many different agents at once, each with its
+own.
 
-Per request, one engine serves them all. Send the same values every time and
-nothing is lost.
+## 2. It means one host can serve many customers
 
-## What is on it
+Because the GCP project and the service-account key travel with each call, a
+single agent server can run:
 
-**The conversation**
+- agent A, billed to customer A's GCP project, on customer A's key
+- agent B, billed to customer B's, on customer B's key
 
-| Field | Notes |
-| --- | --- |
-| `prompt` | The system instruction. |
-| `greeting`, `closing` | The opening line and the line before hangup. |
-| `persona_text` | Pushed in as a silent turn *after* the greeting — known, not spoken. |
-| `voice`, `model`, `language`, `temperature` | |
-| `tools` | Replaces the server's tool set for this call. See [tools](/docs/agent-server/concepts/tools/). |
-| `opening` | Who speaks first. |
+at the same time. As host configuration this would be impossible — one
+deployment could only ever serve one account, and serving two meant running two
+servers.
 
-**Behaviour** — pointers, because absent must mean *"the engine decides"*
-rather than *"off"*:
+## 3. It means this host holds no credentials
 
-| Field | Nil means |
-| --- | --- |
-| `allow_interruptions` | on |
-| `greeting_interruptible` | off |
-| `backchannel_gate` | on — short acknowledgements don't cut the agent off |
-| `silence_monitor` | the backend's own default |
-| `amd_enabled` | off |
-| `audio_nothing` | off |
-| `lost_utterance_replay` | the engine's default |
+There is no service-account key on this machine and no file to mount. If
+somebody copies the image, they get no customer's credentials with it.
 
-**Placement** — where the call runs and who pays:
-
-| Field | Notes |
-| --- | --- |
-| `gemini_project_id` | **Required.** The engine has none of its own. |
-| `google_credentials_json` | **Required.** A service-account key, verbatim. |
-| `gemini_location` | Defaults to `us-central1`. |
-| `ai_backend`, `ai_classify_backend`, `ai_transcribe_model` | Falls back to the engine's defaults. |
-
-{{% alert title="The key is a secret on the wire" color="warning" %}}
-`google_credentials_json` is a service-account key. The gRPC listener has no
-transport security of its own, so send it only with TLS terminated in front of
-the port.
-
-The engine never logs it — log lines show `creds=supplied (2347 bytes)`, never
-the key — but the transport is yours to protect.
-{{% /alert %}}
-
-## Per field, never all-or-nothing
-
-Each field falls back on its own. A profile naming a project but no region asks
-for **that project** in the engine's default region — not for the engine's
-project. There is no "half-configured" state where naming one thing silently
-reverts another.
-
-## A call with no placement is refused
-
-The engine holds no project and no credentials, so there is nothing ambient to
-fall back onto:
+The trade is that **a call carrying no credentials cannot run**. There is
+nothing to fall back onto, so it is refused:
 
 ```
 gemini: this call carried no credentials for project "my-project" —
@@ -85,7 +45,29 @@ on the agent, or GOOGLE_APPLICATION_CREDENTIALS on the agent client that sends
 its profile
 ```
 
-Refusing is the point. The alternative is borrowing whatever identity the host
-carries — on a GCE instance that authenticates successfully and then fails the
-Live handshake with `insufficient authentication scopes`, a message that
-describes neither the missing setting nor the account it silently used.
+If you see that, the fix is on the **client**, not here. See
+[troubleshooting](/docs/agent-server/operations/troubleshooting/).
+
+## What is in a profile
+
+You do not set these — the client does — but knowing what a call carries makes
+the logs readable.
+
+| Group | Examples |
+| --- | --- |
+| **The conversation** | prompt, greeting, closing line, voice, model, language |
+| **Placement** | GCP project, region, service-account key, which AI vendor |
+| **Behaviour** | can the caller interrupt, is the greeting interruptible, silence handling, answering-machine detection |
+| **Tools** | the functions this agent may call, answered by the client |
+
+Each field falls back on its own. A client sending a project but no region gets
+**that project** in the default region — not a half-configured call.
+
+## Where the environment still helps
+
+A handful of environment variables act as fallbacks for calls whose profile
+leaves a field unset — the default AI backend, whether answering-machine
+detection runs. They are listed in
+[configuration](/docs/agent-server/configuration/).
+
+The project and the key are **not** among them. Those must come from the call.

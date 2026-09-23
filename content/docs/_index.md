@@ -23,16 +23,16 @@ is waiting.
 {{% /alert %}}
 
 {{% alert title="Agent Server" color="primary" %}}
-**[ulai-agent-server](/docs/agent-server/)** — the voice engine. Joins an Ulai
-SFU room, connects an AI backend, and runs the conversation: the audio chain,
-turn detection, barge-in, the silence ladder and the end-call contract. It
-holds no database and no credentials — everything about how a call runs arrives
-with the request that starts it.
+**[ulai-agent-server](/docs/agent-server/)** — the voice engine, shipped as a
+container image. Joins an Ulai SFU room, connects an AI backend, and runs the
+conversation: the audio chain, turn detection, barge-in and the end-call
+contract. It holds no database and no credentials — everything about how a call
+runs arrives with the call.
 
 [Overview](/docs/agent-server/overview/) ·
-[Getting started](/docs/agent-server/getting-started/) ·
+[Deploy it](/docs/agent-server/getting-started/) ·
 [Configuration](/docs/agent-server/configuration/) ·
-[gRPC API](/docs/agent-server/grpc-api/)
+[Interfaces](/docs/agent-server/grpc-api/)
 {{% /alert %}}
 
 More modules are documented here as they land.

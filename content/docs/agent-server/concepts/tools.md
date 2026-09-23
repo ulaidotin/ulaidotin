@@ -1,84 +1,54 @@
 ---
 title: Tools
-description: Your functions, called by the model, answered by your process.
+description: Why an agent can look things up, and where that work happens.
 weight: 2
 ---
 
-An agent that can only talk is half an agent. Tools are how it looks something
-up in *your* system mid-call — a balance, an order status, an appointment slot.
+An agent can do more than talk. Mid-call it can look up a balance, an order
+status, an appointment slot — anything the business it belongs to can answer.
 
-The engine has no database and no idea what your tools mean, so it does not
-answer them. You do.
+**None of that work happens on this host.** The agent server has no database
+and no idea what any of those tools mean. It carries the request out to the
+agent client and carries the answer back.
 
-## Declaring and answering are one act
-
-A tool needs both halves to work: a **declaration**, or the model never calls
-it, and a **handler**, or nothing answers when it does. Register them together:
-
-```go
-// Declared on the profile, so the model knows it exists…
-profile.Tools = []ulaisdk.Tool{{
-    Name:        "check_balance",
-    Description: "Look up the caller's current balance",
-    Params:      map[string]ulaisdk.Param{"account": {Type: "string"}},
-    Required:    []string{"account"},
-}}
-
-// …and handled on the session, so something answers when it is called.
-sess.Tool("check_balance", func(ctx context.Context, args map[string]any) (any, error) {
-    return theirDatabase.Balance(ctx, args["account"].(string))
-})
+```
+model asks for "check_balance"
+        │
+        ▼
+  agent server ──▶ agent client ──▶ the business's own system
+        ◀──────────── answer ◀───────────────┘
+        │
+        ▼
+model continues the conversation
 ```
 
-Registering them separately means either half can be forgotten, and both
-failures are silent: a declared tool with no handler is a model told its own
-tool does not exist; a handler with no declaration is code that never runs.
+## What this means operationally
 
-## Claiming
+**Tools are configured on the agent, not here.** There is nothing to install,
+declare or permit on this host to make a tool available.
 
-Registering a handler is what **claims** the tool. When the session starts
-pumping, the SDK names every handler it holds to the server, and from then on
-the server routes those calls to you instead of answering them itself.
+**A slow tool is heard as silence.** While the client is answering, the model
+is not speaking, and the caller hears that. The wait is bounded and always ends
+in an answer to the model — if the client does not answer in time, the model is
+told the lookup failed so it can apologise and carry on. A caller hearing "I
+couldn't pull that up just now" is a far better outcome than a line that goes
+quiet.
 
-That includes the server's own `end_call`: register a handler for it and the
-ending contract becomes yours — along with the duty to answer it and to call
-`Hangup` when the call really should end.
+So a tool that is slow on the client side shows up as pauses in conversations,
+not as errors in this log.
 
-A tool you did not claim is answered by the server.
+**Two tools belong to the server.** `end_call` — how a model hangs up, subject
+to a contract that checks it is entitled to — and a no-op tool declared beside
+it. The second exists so that a model which feels the urge to "use a tool" at a
+moment that is not an ending has somewhere harmless to put it, rather than
+reaching for `end_call` and cutting a live human off.
 
-## The deadline
+It is answered instantly, inside the server, precisely because sending it out
+and back would spend a multi-second silence avoiding a mistake that costs
+nothing.
 
-The server holds the turn open while you answer, and the model is **silent for
-every millisecond of it**. The caller hears that silence.
+## In the logs
 
-So the wait is bounded, and it always ends in an answer to the model — never in
-silence. If your handler does not answer in time, the model is told the lookup
-failed, so it can apologise and carry on. A tool that failed and was apologised
-for beats a line that went dead.
-
-A handler doing real I/O should carry its own timeout well inside the server's.
-
-## Errors are answers
-
-Returning an error from a handler does **not** abandon the call. The error text
-is reported to the model as the tool's result, because a model waiting on a
-result that never arrives stalls the turn and the caller hears nothing at all.
-
-## The one tool you cannot claim
-
-`continue_conversation` — the no-op decoy declared beside `end_call` — is
-answered inside the receive loop and never reaches dispatch.
-
-That is deliberate. Realtime function calling is synchronous: the model stops
-generating until the answer comes back. The decoy exists to give a model that
-feels the urge to "use a tool" somewhere harmless to put it, and routing it
-over the network would spend a multi-second silence avoiding a misfire that
-costs nothing.
-
-Claiming it is ignored rather than refused.
-
-## Observing without answering
-
-`OnToolCall` fires for **every** tool call the model makes, including the ones
-the server keeps for itself. It observes; it does not answer. Registering a
-handler is what answers one.
+Tool activity appears against the call's bridge id. A call that pauses oddly,
+with the agent going quiet and then apologising, is usually a tool the client
+was slow to answer — the place to look is the client's logs, not this one.

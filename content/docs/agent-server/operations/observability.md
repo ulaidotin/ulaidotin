@@ -4,8 +4,16 @@ description: The log lines worth knowing, and what they tell you.
 weight: 2
 ---
 
-Everything is stdout. Every line for a call carries its bridge id, so one call
-is one filter.
+Everything goes to stdout, so `docker logs` is the whole interface. Every line
+for a call carries its bridge id, which makes one call one filter:
+
+```sh
+docker logs agent_server --tail 100
+docker logs agent_server 2>&1 | grep 48c7ad0bc30f     # one call
+docker logs -f agent_server                            # follow
+```
+
+There are no metrics endpoints. Ship stdout to wherever you keep logs.
 
 ## At boot
 
@@ -59,8 +67,8 @@ that turn was heard before it was cut.
 
 ## Audio
 
-With `AUDIO_NOTHING=true` the chain is cut down to the denoiser and says so
-loudly:
+With `AUDIO_NOTHING=true` set on this host, the chain is cut down to the
+denoiser and says so loudly:
 
 ```
 [AUDIO] AUDIO_NOTHING=true — pure RNNoise (preprocessor + foreground gate disabled)

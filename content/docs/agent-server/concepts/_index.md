@@ -1,7 +1,9 @@
 ---
-title: Concepts
-description: The agent profile, tools, and the shape of a call.
+title: What a call carries
+linkTitle: What a call carries
+description: Why the environment is short, and what arrives per call instead.
 weight: 3
 ---
 
-Three ideas explain most of the design.
+The agent server is configured by two things, and only one of them is on this
+host.

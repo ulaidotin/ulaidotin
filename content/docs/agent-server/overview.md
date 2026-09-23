@@ -55,32 +55,26 @@ safe to hand to somebody else.
 
 The **agent client** decides which agent runs, what it says, and where it is
 billed. It sends all of that with each call. The **agent server** runs the
-call. The two speak gRPC; the contract is
-[agentsession.v1](/docs/agent-server/grpc-api/).
+call. The two speak over port 50052 — see [interfaces](/docs/agent-server/grpc-api/).
 
 A client that crashes mid-call does not drop the caller. The engine carries on
 with the configuration it was given; what is lost is the client's ability to
 steer and to record, not the conversation.
 
-## Two surfaces
+## How it is shipped
 
-There are two independent ways to use it, and they compose:
+As a container image, and only as one. There is no source build, no package to
+install and no plugin to load — everything the engine needs is inside it,
+including the compiled audio libraries.
 
-- **Bridges** — *where the agent is.* Put an agent into a room, take it out
-  again. This is the minimum: an agent placed in a bridge holds a full
-  conversation with nobody watching.
-- **Sessions** — *the conversation it is having.* Attach to a running call to
-  receive transcripts and turn events, answer tool calls, inject context, make
-  the agent speak a specific line, or hang up.
+What you supply is a port, a key, and a client to drive it. See
+[deploy it](/docs/agent-server/getting-started/).
 
-Either can be driven without the other. See the
-[gRPC API](/docs/agent-server/grpc-api/).
+## What it does not carry
 
-## Audio never crosses the API
+Audio never leaves the media path. The agent client receives transcripts and
+sends text; no audio frame crosses the control port.
 
-Clients receive transcripts and send text. No audio frame ever crosses the gRPC
-boundary.
-
-This is the single most important property of the design: the round trip a
-client adds lands *between* turns, where tens of milliseconds are invisible —
-not inside the frame cadence, where they are a stutter the caller hears.
+That is what keeps a slow or distant client from being heard: the round trip it
+adds lands *between* turns, where tens of milliseconds are invisible — not
+inside the frame cadence, where they are a stutter the caller hears.

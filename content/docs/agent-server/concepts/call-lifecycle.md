@@ -34,10 +34,10 @@ The engine owns the timing. Every 20 ms of caller audio runs the chain —
 pre-clean, denoise, near-field foreground isolation, neural VAD — and the VAD
 is the authoritative turn driver.
 
-An attached client receives transcripts and turn events and can steer between
+The agent client receives transcripts and turn events and can steer between
 turns. What it cannot do is touch the media path: there is no way to send audio
-and no way to change the DSP chain. Everything on that surface is a decision
-that is genuinely the client's.
+into the call and no way to change the audio processing. Timing stays with the
+engine.
 
 ## Barge-in
 
@@ -58,7 +58,7 @@ Three ways a call ends:
 | | |
 | --- | --- |
 | The caller hangs up | The leg drops; the room reports it. |
-| The client calls `Hangup` | Optionally running the closing sequence first. |
+| The client ends it | Optionally running the closing sequence first. |
 | The model calls `end_call` | Subject to the end-call contract. |
 
 `end_call` is not a request the model gets for free. It must produce evidence —

@@ -1,20 +1,21 @@
 ---
 title: Agent Server
 linkTitle: Agent Server
-description: The voice engine. Agents in, conversations out.
+description: The voice engine, shipped as a container image.
 weight: 2
 ---
 
-`ulai-agent-server` is a single Go binary (`orchestrator`) that runs a voice
-conversation. It joins an Ulai SFU room as a participant, connects an AI
-backend, and owns everything that has to be right to the millisecond — the
-audio chain, turn detection, barge-in, playback accounting, the silence ladder,
-the end-call contract.
+`ulai-agent-server` is the voice engine. It joins an Ulai SFU room, connects an
+AI backend, and runs the conversation — the audio chain, turn detection,
+barge-in, the silence ladder and the end-call contract.
+
+It ships as a **container image**. There is nothing to build and nothing to
+compile.
 
 It holds no database, no agent store and no credentials. Everything about *how
-a call runs* arrives with the request that starts it.
-
-Source: [github.com/ulaidotin/ulai-agent-server](https://github.com/ulaidotin/ulai-agent-server)
+a call runs* — the prompt, the voice, the GCP project, the service-account key
+— arrives from whatever drives it, per call. That is why the configuration
+below is so short.
 
 ## Run it
 
@@ -24,52 +25,44 @@ docker run -d --name agent_server --restart unless-stopped \
   -p 8000:8000 \
   -e APP_GRPC_LISTEN_PORT=50052 \
   -e APP_HTTP_PORT=8000 \
-  -e ULAI_GRPC_API_KEY='<64-char key>' \
-  -e PROMPT_LOG=on \
+  -e ULAI_GRPC_API_KEY='<64-character key>' \
   asia-south1-docker.pkg.dev/arctic-operand-415316/ulai/agent_server:v1.02
 ```
 
-That is the whole configuration. No GCP project, no service-account key, no
-model, no vendor — those travel with each call. See
-[configuration](/docs/agent-server/configuration/).
+Check it:
 
-## Put an agent in a room
-
-Nothing here is HTTP. The control surface is gRPC, and the supported way to
-speak it is the Go SDK:
-
-```go
-client, _ := ulaisdk.Dial(ctx, "agent-server:50052",
-    ulaisdk.WithAPIKey(key), ulaisdk.Secure())
-
-b, _ := client.JoinBridge(ctx, ulaisdk.JoinBridgeRequest{
-    AgentID:            "agent_42",
-    BridgeID:           roomID,
-    ControlPlaneURL:    "https://stgcp.ulai.co.in",
-    ControlPlaneAPIKey: "ulai_live_…",
-    Profile: &ulaisdk.Profile{
-        Prompt:                "You are a support agent for …",
-        Greeting:              "Hello, thanks for calling.",
-        Voice:                 "Kore",
-        GeminiProjectID:       "my-gcp-project",
-        GoogleCredentialsJSON: string(keyJSON),
-    },
-})
+```sh
+curl -s http://localhost:8000/health     # → ok
 ```
 
-The room must already exist — the agent server never creates one.
+That is the whole installation. See
+[deploy it](/docs/agent-server/getting-started/) for the full walk-through,
+including the part that actually makes calls happen.
+
+## What you still need
+
+The agent server does not place calls by itself. It waits on port `50052` for
+an **agent client** to tell it which room to join and which agent to run.
+
+```
+  agent client  ──gRPC :50052──▶  agent server  ──▶  Ulai SFU room
+  (drives calls)                   (this image)       (the conversation)
+```
+
+Both sides must share the same key: whatever you set as `ULAI_GRPC_API_KEY`
+here, the client must present. Nothing happens until a client connects.
 
 ## In this section
 
 - **[Overview](/docs/agent-server/overview/)** — what it does, what it
   deliberately does not, and where it sits.
-- **[Getting started](/docs/agent-server/getting-started/)** — run it, put an
-  agent in a room, and read the logs that say it worked.
-- **[Concepts](/docs/agent-server/concepts/)** — the agent profile, tools, and
-  the shape of a call.
+- **[Deploy it](/docs/agent-server/getting-started/)** — pull, run, verify, and
+  connect a client.
 - **[Configuration](/docs/agent-server/configuration/)** — every environment
-  variable, and the much longer list of things that are *not* environment.
-- **[gRPC API](/docs/agent-server/grpc-api/)** — the three services and what
-  each one is for.
+  variable, and the longer list of things that are *not* environment.
+- **[What a call carries](/docs/agent-server/concepts/)** — why the environment
+  is short, and what arrives per call instead.
+- **[Interfaces](/docs/agent-server/grpc-api/)** — the two ports and what talks
+  to them.
 - **[Operations](/docs/agent-server/operations/)** — deployment, observability
   and troubleshooting.

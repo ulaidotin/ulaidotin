@@ -1,99 +1,93 @@
 ---
-title: gRPC API
-description: Three services — bridges, sessions, dispatch.
+title: Interfaces
+linkTitle: Interfaces
+description: Two ports, and what talks to them.
 weight: 5
 ---
 
-The control surface is gRPC, `agentsession.v1`. There is no HTTP API beyond
-`/health`.
+The image exposes two ports and nothing else. There is no web UI, no admin
+endpoint and no configuration API — the agent server is driven entirely by the
+agent client.
 
-Every RPC requires the API key as `x-api-key` metadata when
-`ULAI_GRPC_API_KEY` is set. Server reflection is registered, so `grpcurl` and
-Postman work without a checked-out `.proto` — behind the same key.
+| Port | Protocol | Who connects | Expose it? |
+| --- | --- | --- | --- |
+| `50052` | gRPC | the agent client | **Loopback or private network only** |
+| `8000` | HTTP | your monitoring | As needed |
 
-The supported client is the Go SDK,
-[`ulaisdk`](https://github.com/ulaidotin/ulai-agent-sdk). Nothing in it names
-gRPC: options, errors and events are the SDK's own, so the transport can change
-without your code changing with it. Other languages generate from the `.proto`.
+## Port 8000 — health
 
-## AgentBridge — where the agent is
+One endpoint:
 
-| RPC | Purpose |
-| --- | --- |
-| `Join` | Put an agent into an existing room. |
-| `Disconnect` | Take it out again. |
-
-```go
-b, err := client.JoinBridge(ctx, ulaisdk.JoinBridgeRequest{
-    AgentID:            "agent_42",     // required
-    BridgeID:           roomID,          // required — the server never creates rooms
-    ControlPlaneURL:    cpURL,           // required — a property of the ROOM
-    ControlPlaneAPIKey: cpKey,
-    Profile:            profile,         // the whole agent configuration
-})
+```sh
+curl -s http://localhost:8000/health     # → ok
 ```
 
-`Join` returns once the agent has a **seat** — not once it is talking.
-Resolving the configuration and connecting the AI backend take a second or two
-more and continue after it returns. Blocking on them would hold a request open
-through a model handshake for failures the caller cannot act on.
+A **liveness** check, not a readiness one. It returns `ok` as soon as the
+process is up, including when no calls are running — which is the normal state.
+It does not tell you whether calls succeed; the log does that.
 
-`BridgeID` is required because the server never creates a room. It used to,
-when the field was empty, and that was a trap: the agent got a room nobody else
-had been told about, joined it alone, and was cut for silence seconds later.
+Safe to expose to a load balancer or monitoring system. It reveals nothing.
 
-Disconnecting an agent does **not** tear the room down. The other participants
-are still talking to each other.
+## Port 50052 — control
 
-## AgentSession — the conversation
+This is where the agent client tells the server which room to join, which agent
+to run, and where to bill it. Everything about a call travels over this port.
 
-`Run` is a bidirectional stream. `Attach` must be its first message; every
-other command is refused on an unbound stream.
+**It must be protected.** Two reasons:
 
-**You receive:** transcripts (partial and final), turn started/ended with how
-much of an agent turn was actually *heard*, agent state, tool calls, token
-usage, and how the call ended.
+1. **There is no encryption.** The server holds no TLS certificate. The API key
+   and the service-account credentials each call carries cross this port in
+   clear text.
+2. **It controls live calls.** A caller who reaches it can place agents into
+   rooms and disconnect ones already talking.
 
-**You send:**
+The safe shapes are:
 
-| Command | What it does |
-| --- | --- |
-| `Say` | Speak this text, as written. For a disclosure or a number read back. |
-| `GenerateReply` | Hand the floor back to the model, optionally with one-turn instructions. |
-| `InjectContext` | Add a fact to the model's context **without speaking it**. |
-| `Interrupt` | Stop the agent mid-utterance. |
-| `Hangup` | End the call, optionally running the closing sequence first. |
-| `ToolResult` | Answer a tool call. See [tools](/docs/agent-server/concepts/tools/). |
-| `HandledTools` | Name the tools this client answers. Sent automatically at `Run`. |
+- Bind to `127.0.0.1` and run a TLS-terminating proxy in front — what the
+  published examples do.
+- Keep it on a private network that only the agent client can reach.
 
-Detaching is **not** hanging up. If the client process dies mid-call the server
-carries on with its own logic — dropping a caller because a client crashed is
-the worse of the two failures. Ending a call is always explicit.
+Publishing `0.0.0.0:50052` to the internet is not one of them.
 
-## AgentDispatch — calls as they start
+### Authentication
 
-`Subscribe` streams an `Assignment` for each call the server starts, so a
-client can drive calls it did not itself place.
+Every request must present `ULAI_GRPC_API_KEY`. The client is configured with
+the same value.
 
-Each assignment carries an **attach deadline**. Miss it and the call is not
-dropped — it carries on under the server's own logic. What is lost is
-everything the client would have added: its tools, its handlers, its overrides.
+Leave the variable unset and the server accepts **everything**, including
+requests that disconnect live agents. It logs a warning saying so at startup,
+once:
 
-## Errors
-
-The SDK translates transport failures into its own vocabulary, and always
-keeps the server's message alongside the sentinel:
-
-```go
-switch {
-case errors.Is(err, ulaisdk.ErrUnauthorized):      // bad or missing key
-case errors.Is(err, ulaisdk.ErrUnavailable):       // unreachable — worth a retry
-case errors.Is(err, ulaisdk.ErrNotSupported):      // this build does not serve it
-case errors.Is(err, ulaisdk.ErrBridgeNotFound):    // the room is gone
-case errors.Is(err, ulaisdk.ErrBridgeFull):        // at its participant limit
-}
+```
+[grpc] WARNING: ULAI_GRPC_API_KEY is unset — :50052 accepts unauthenticated
+calls, including ones that disconnect live agents
 ```
 
-A build that forwards calls rather than running them has no sessions of its
-own, and answers `AgentSession` and `AgentDispatch` with `ErrNotSupported`
-saying exactly that. `AgentBridge` works on both.
+One key, shared by every client. There is no per-client identity and no way to
+revoke one caller without rotating for all of them, so treat the key as an
+infrastructure secret rather than a per-team credential.
+
+### What it actually serves
+
+For completeness, the port serves three gRPC services — `AgentBridge` (put an
+agent in a room, take it out), `AgentSession` (drive a live conversation) and
+`AgentDispatch` (receive calls as they start). Operating the server requires no
+knowledge of them; they matter to whoever builds the client.
+
+Server reflection is enabled, so `grpcurl` can inspect the port for debugging —
+behind the same key:
+
+```sh
+grpcurl -H 'x-api-key: <key>' -plaintext localhost:50052 list
+```
+
+## Outbound connections
+
+The server also makes connections *out*, which your egress rules must allow:
+
+| To | For |
+| --- | --- |
+| The Ulai control plane and SFU nodes | joining rooms and carrying audio |
+| The AI backend (Vertex AI by default) | the conversation itself |
+
+Both are named per call by the client, not configured here.
