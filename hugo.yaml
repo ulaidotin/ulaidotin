@@ -38,7 +38,9 @@ outputs:
   section: [HTML, print, RSS]
 
 params:
-  description: Run Ulai's voice AI infrastructure on your own VMs.
+  description: >-
+    Documentation for deploying and operating the Ulai voice AI platform on your
+    own infrastructure.
 
   # No tagged content yet; empty lists switch the taxonomy UI off entirely.
   taxonomy:

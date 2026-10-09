@@ -8,32 +8,32 @@
     <div class="ulai-node">
       <span class="ulai-node__icon"><i class="fa-solid fa-phone" aria-hidden="true"></i></span>
       <span class="ulai-node__name">Caller</span>
-      <span class="ulai-node__note">on the phone network</span>
+      <span class="ulai-node__note">via your carrier</span>
     </div>
     <div class="ulai-hop"><span>SIP · RTP</span></div>
     <a class="ulai-node ulai-node--module" href="{{ $sip }}">
       <span class="ulai-node__icon"><i class="fa-solid fa-phone-volume" aria-hidden="true"></i></span>
       <span class="ulai-node__name">SIP Gateway</span>
-      <span class="ulai-node__note">answers and dials</span>
+      <span class="ulai-node__note">telephony bridge</span>
     </a>
     <div class="ulai-hop"><span>WebRTC</span></div>
     <div class="ulai-node">
       <span class="ulai-node__icon"><i class="fa-solid fa-people-group" aria-hidden="true"></i></span>
       <span class="ulai-node__name">Ulai SFU room</span>
-      <span class="ulai-node__note">where everyone meets</span>
+      <span class="ulai-node__note">real-time media</span>
     </div>
     <div class="ulai-hop"><span>WebSocket</span></div>
     <a class="ulai-node ulai-node--module" href="{{ $agent }}">
       <span class="ulai-node__icon"><i class="fa-solid fa-wave-square" aria-hidden="true"></i></span>
       <span class="ulai-node__name">Agent Server</span>
-      <span class="ulai-node__note">runs the conversation</span>
+      <span class="ulai-node__note">conversation engine</span>
     </a>
     <div class="ulai-hop"><span>streaming</span></div>
     <div class="ulai-node">
       <span class="ulai-node__icon"><i class="fa-solid fa-brain" aria-hidden="true"></i></span>
       <span class="ulai-node__name">AI backend</span>
-      <span class="ulai-node__note">Gemini Live, …</span>
+      <span class="ulai-node__note">e.g. Gemini Live</span>
     </div>
   </div>
-  <figcaption>How a phone call reaches an AI agent. The highlighted components are the ones these docs show you how to deploy.</figcaption>
+  <figcaption>Call path from the telephone network to the AI agent. Highlighted components are covered in this documentation.</figcaption>
 </figure>

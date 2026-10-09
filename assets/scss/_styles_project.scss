@@ -129,7 +129,14 @@ $ulai-ink: $dark;
     }
 
     .display-6 {
-      color: rgba($white, 0.85);
+      color: rgba($white, 0.9);
+    }
+
+    .ulai-hero-sub {
+      max-width: 38rem;
+      margin: 1rem auto 0;
+      font-size: 1.125rem;
+      color: rgba($white, 0.7);
     }
   }
 
