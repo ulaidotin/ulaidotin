@@ -21,3 +21,476 @@ https://www.docsy.dev/docs/content/lookandfeel/#project-style-files
     color: tint-color($primary, 80%) !important;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Ulai brand
+
+$ulai-emerald: $secondary;
+$ulai-emerald-50: #ecfdf5;
+$ulai-emerald-100: #d1fae5;
+$ulai-emerald-300: #6ee7b7;
+$ulai-ink: $dark;
+
+// Navbar: the ulai wordmark stands in for the site name, so only "Docs" is
+// shown beside it. The full title stays in the DOM for screen readers, and the
+// visible label has empty alt text so it is not read twice.
+.td-navbar .navbar-brand {
+  svg {
+    width: auto;
+  }
+
+  &__name {
+    font-size: 0;
+
+    &::after {
+      content: 'Docs';
+      content: 'Docs' / '';
+      font-size: 1.125rem;
+      padding-left: 0.625rem;
+      border-left: 1px solid var(--bs-border-color);
+    }
+  }
+}
+
+// A light emerald section background for blocks/section color="ulai-tint".
+.td-box--ulai-tint {
+  color: var(--bs-body-color);
+  background-color: $ulai-emerald-50;
+}
+
+@include color-mode(dark) {
+  // The wordmark is black ink.
+  .td-navbar .navbar-brand__logo svg {
+    filter: invert(1);
+  }
+
+  .td-box--ulai-tint {
+    background-color: #0c1d18;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Home page
+
+.td-home {
+  h2 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+  }
+
+  .lead {
+    max-width: 46rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .ulai-section-sub {
+    color: var(--bs-secondary-color);
+    margin: 0 auto 2.5rem;
+  }
+
+  // Section headings here are not worth linking to.
+  .td-heading-self-link {
+    display: none;
+  }
+
+  // Docsy derives link colors in light boxes from Bootstrap's blue; use the
+  // site's link color instead.
+  .td-box--white,
+  .td-box--ulai-tint {
+    p > a,
+    span > a {
+      color: var(--bs-link-color);
+
+      &:focus,
+      &:hover {
+        color: var(--bs-link-hover-color);
+      }
+    }
+  }
+
+  code {
+    color: var(--bs-emphasis-color);
+  }
+
+  // The background is already dark, so the overlay meant for photos goes. The
+  // image is sized by height, so its waveform always fills the bottom fifth of
+  // the cover; the bottom padding keeps the content clear of it.
+  .td-cover-block {
+    align-items: center;
+    padding-bottom: 10rem;
+    background-color: #0b1120;
+    background-position: 50% 100%;
+    background-size: auto 100%;
+
+    &.td-overlay--dark::after {
+      background-color: transparent;
+    }
+
+    .display-6 {
+      color: rgba($white, 0.85);
+    }
+  }
+
+  .ulai-hero-logo {
+    margin: 0 0 1.5rem;
+
+    img {
+      width: min(20rem, 70vw);
+      height: auto;
+      filter: invert(1); // black ink → white on the dark cover
+    }
+  }
+
+  // Module cards
+
+  .ulai-modules {
+    row-gap: 1.5rem;
+  }
+
+  .ulai-module {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.75rem;
+    background-color: var(--bs-body-bg);
+    border: 1px solid $ulai-emerald-100;
+    border-radius: 1rem;
+    box-shadow:
+      0 1px 2px rgba($ulai-ink, 0.04),
+      0 8px 24px rgba($ulai-ink, 0.06);
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 1px 2px rgba($ulai-ink, 0.06),
+        0 14px 32px rgba($ulai-ink, 0.1);
+    }
+
+    &__head {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    &__icon {
+      flex: none;
+      display: grid;
+      place-items: center;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 0.75rem;
+      background-color: $ulai-emerald;
+      color: $white;
+      font-size: 1.25rem;
+    }
+
+    &__title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 0;
+
+      a {
+        color: inherit;
+        text-decoration: none;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+
+    &__repo {
+      padding: 0;
+      background: none;
+      font-size: 0.8rem;
+      color: var(--bs-secondary-color);
+    }
+
+    &__tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+
+      li {
+        padding: 0.25rem 0.6rem;
+        border-radius: 0.375rem;
+        background-color: $ulai-emerald-50;
+        color: $primary;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+    }
+
+    &__body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+
+      ul {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin: auto 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      li a {
+        display: inline-block;
+        padding: 0.35rem 0.85rem;
+        border: 1px solid var(--bs-border-color);
+        border-radius: 999px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-decoration: none;
+
+        &:hover {
+          border-color: $ulai-emerald;
+          background-color: rgba($ulai-emerald, 0.08);
+        }
+      }
+    }
+  }
+
+  // Features: Docsy's feature columns assume a single row, so give stacked
+  // rows some air.
+  .ulai-features {
+    > .col-lg-4 {
+      margin-bottom: 3rem !important;
+    }
+
+    .h1 {
+      display: inline-grid;
+      place-items: center;
+      width: 4rem;
+      height: 4rem;
+      border-radius: 50%;
+      background-color: $ulai-emerald-50;
+      color: $primary;
+      font-size: 1.6rem;
+    }
+
+    h4 {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .mb-0 {
+      color: var(--bs-secondary-color);
+    }
+  }
+
+  // Numbers band
+
+  .ulai-stats h2 {
+    color: $white;
+  }
+
+  .ulai-stat {
+    display: block;
+    height: 100%;
+    padding: 1.25rem 0.5rem;
+    border-radius: 0.75rem;
+    text-align: center;
+    text-decoration: none;
+    color: $white !important;
+
+    &:hover {
+      background-color: rgba($white, 0.08);
+    }
+
+    &__value {
+      display: block;
+      font-size: clamp(2.25rem, 5vw, 3.25rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    &__label {
+      display: block;
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+      color: $ulai-emerald-100;
+    }
+  }
+
+  // Closing call to action
+
+  .ulai-cta {
+    h2 {
+      color: $white;
+    }
+
+    .lead {
+      color: rgba($white, 0.8);
+    }
+
+    a:not(.btn) {
+      color: $ulai-emerald-300;
+    }
+  }
+
+  // The call path diagram
+
+  .ulai-call-path {
+    margin: 3rem 0 0;
+
+    &__track {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      @include media-breakpoint-up(lg) {
+        flex-direction: row;
+        align-items: stretch;
+      }
+    }
+
+    figcaption {
+      margin-top: 1.5rem;
+      text-align: center;
+      font-size: 0.875rem;
+      color: var(--bs-secondary-color);
+    }
+  }
+
+  .ulai-node {
+    flex: none;
+    width: 12rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 1.25rem 0.75rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 1rem;
+    background-color: var(--bs-body-bg);
+    color: inherit;
+    text-align: center;
+    text-decoration: none;
+
+    @include media-breakpoint-up(lg) {
+      width: 8.5rem;
+    }
+
+    @include media-breakpoint-up(xl) {
+      width: 10rem;
+    }
+
+    &__icon {
+      display: grid;
+      place-items: center;
+      width: 2.75rem;
+      height: 2.75rem;
+      border-radius: 50%;
+      background-color: var(--bs-tertiary-bg);
+      color: var(--bs-emphasis-color);
+      font-size: 1.1rem;
+    }
+
+    &__name {
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    &__note {
+      font-size: 0.8rem;
+      color: var(--bs-secondary-color);
+    }
+
+    &--module {
+      border-color: $ulai-emerald;
+      box-shadow: 0 0 0 3px rgba($ulai-emerald, 0.15);
+
+      .ulai-node__icon {
+        background-color: $ulai-emerald;
+        color: $white;
+      }
+
+      &:hover {
+        color: inherit;
+        background-color: rgba($ulai-emerald, 0.06);
+
+        .ulai-node__name {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+
+  .ulai-hop {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 3.25rem;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 2px;
+      transform: translateX(-50%);
+      background: linear-gradient($ulai-emerald, $primary);
+    }
+
+    span {
+      position: relative;
+      padding: 0.1rem 0.5rem;
+      border: 1px solid var(--bs-border-color);
+      border-radius: 999px;
+      background-color: var(--bs-body-bg);
+      color: var(--bs-secondary-color);
+      font-size: 0.72rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    @include media-breakpoint-up(lg) {
+      flex: 1 1 0;
+      min-width: 4.5rem;
+      min-height: 0;
+
+      &::before {
+        top: 50%;
+        bottom: auto;
+        left: 0;
+        right: 0;
+        width: auto;
+        height: 2px;
+        transform: translateY(-50%);
+        background: linear-gradient(90deg, $ulai-emerald, $primary);
+      }
+    }
+  }
+}
+
+@include color-mode(dark) {
+  .td-home {
+    .ulai-module {
+      border-color: var(--bs-border-color);
+
+      &__tags li {
+        background-color: rgba($ulai-emerald, 0.14);
+        color: $ulai-emerald-300;
+      }
+    }
+
+    .ulai-features .h1 {
+      background-color: rgba($ulai-emerald, 0.14);
+      color: $ulai-emerald-300;
+    }
+  }
+}

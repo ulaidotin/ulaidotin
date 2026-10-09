@@ -2,3 +2,16 @@
 Projects can override this file. For details, see:
 https://www.docsy.dev/docs/content/lookandfeel/#project-style-files
 */
+
+// Ulai brand, as on ulai.in: near-black ink, emerald accent, Inter.
+//
+// Primary is a deeper emerald than the brand accent so that white text on it
+// (buttons) and it on white (links) both pass WCAG AA; the brand emerald itself
+// is the secondary.
+$primary: #047857;
+$secondary: #10b981;
+$dark: #111827;
+
+$td-enable-google-fonts: true;
+$td-google-font-name: 'Inter';
+$td-google-font-family: 'Inter:300,400,500,600,700,800';

@@ -1,0 +1,10 @@
+{{- /* The Ulai wordmark as the home page's h1. The PNG is black ink on
+  transparency; the stylesheet inverts it to white on the dark cover. */ -}}
+{{ with resources.Get "images/ulai-logo.png" -}}
+<h1 class="ulai-hero-logo">
+  <img src="{{ .RelPermalink }}" width="{{ .Width }}" height="{{ .Height }}" alt="Ulai">
+  <span class="visually-hidden">Docs</span>
+</h1>
+{{- else -}}
+  {{ errorf "home/hero-logo: assets/images/ulai-logo.png not found" -}}
+{{ end -}}

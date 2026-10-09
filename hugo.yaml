@@ -38,7 +38,7 @@ outputs:
   section: [HTML, print, RSS]
 
 params:
-  description: Documentation for Ulai's modules.
+  description: Run Ulai's voice AI infrastructure on your own VMs.
 
   # No tagged content yet; empty lists switch the taxonomy UI off entirely.
   taxonomy:

@@ -1,0 +1,8 @@
+{{- /* One figure in the home page's numbers band. Params: value, label, url. */ -}}
+{{ $href := partial "home/href.html" (.Get "url") -}}
+<div class="col-6 col-lg-3">
+  <a class="ulai-stat" href="{{ $href }}">
+    <span class="ulai-stat__value">{{ .Get "value" }}</span>
+    <span class="ulai-stat__label">{{ .Get "label" }}</span>
+  </a>
+</div>

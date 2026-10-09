@@ -1,0 +1,33 @@
+{{- /* A module card on the home page.
+
+  Params: title, url, icon (Font Awesome classes), repo, tags (comma-separated).
+  Inner (markdown): a description, then a list of links into the module's docs.
+
+  Called with {{% %}}, so this output is itself parsed as markdown: the HTML is
+  kept unindented, with no blank lines inside it, and the inner markdown is set
+  off by blank lines on both sides. Otherwise the closing tags turn into a code
+  block. */ -}}
+{{ $href := partial "home/href.html" (.Get "url") -}}
+<div class="col-lg-6">
+<div class="ulai-module">
+<div class="ulai-module__head">
+<span class="ulai-module__icon"><i class="{{ .Get "icon" }}" aria-hidden="true"></i></span>
+<div>
+<h3 class="ulai-module__title"><a href="{{ $href }}">{{ .Get "title" }}</a></h3>
+{{- with .Get "repo" }}
+<code class="ulai-module__repo">{{ . }}</code>
+{{- end }}
+</div>
+</div>
+{{- with .Get "tags" }}
+<ul class="ulai-module__tags">
+{{- range split . "," }}<li>{{ trim . " " }}</li>{{ end -}}
+</ul>
+{{- end }}
+<div class="ulai-module__body">
+
+{{ .Inner }}
+
+</div>
+</div>
+</div>

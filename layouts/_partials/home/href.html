@@ -1,0 +1,8 @@
+{{- /* Resolves a content path such as "/docs/sip/" to its permalink, so links
+  stay correct whatever the site's base path is. Anything that is not a page
+  is returned unchanged. */ -}}
+{{- $href := . -}}
+{{- with and $href (site.GetPage (strings.TrimSuffix "/" $href)) -}}
+  {{- $href = .RelPermalink -}}
+{{- end -}}
+{{- return $href -}}
