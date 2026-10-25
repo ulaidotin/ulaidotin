@@ -142,9 +142,6 @@ Two lines are the ones to know:
 - **`greeting primed`** — the backend connected and the agent is about to
   speak. If this never appears, the call died before it could talk.
 
-A call on the cascade backend prints a `ready — mode=… llm=… tts=…` line in
-place of `[gemini] connected`, listing every setting it is running on.
-
 ## Upgrading
 
 ```sh

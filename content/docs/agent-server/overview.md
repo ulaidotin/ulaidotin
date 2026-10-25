@@ -48,7 +48,7 @@ safe to hand to somebody else.
   agent client  ──gRPC──▶  agent server  ──WebSocket──▶  Ulai SFU room
   (your logic)              (this)                        (the conversation)
        │                       │
-       │                       └──▶ AI backend (chosen per call)
+       │                       └──▶ AI backend (Gemini Live, …)
        │
        └──▶ your database, your dashboards, your billing
 ```
@@ -56,14 +56,6 @@ safe to hand to somebody else.
 The **agent client** decides which agent runs, what it says, and where it is
 billed. It sends all of that with each call. The **agent server** runs the
 call. The two speak over port 50052 — see [interfaces](/docs/agent-server/grpc-api/).
-
-Each call names its AI backend:
-
-| Backend | How it works |
-| --- | --- |
-| `gemini-live` (default) | Gemini's realtime speech-to-speech API. |
-| `google-cascade` | Three stages: Cloud Speech-to-Text, a Gemini model, Cloud Text-to-Speech. The engine decides where each turn ends. |
-| `ulai-live` | The Ulai Live realtime API. |
 
 A client that crashes mid-call does not drop the caller. The engine carries on
 with the configuration it was given; what is lost is the client's ability to

@@ -54,30 +54,16 @@ there.
 
 ## No longer read
 
-Earlier images read some call settings from the environment, as defaults for
-every call on the host. They now arrive with each call, on the profile, and the
-server ignores them here:
+Earlier images also read call settings from the environment. These are now
+ignored, because every call setting arrives with the call:
 
-| Variable | Now set per call as |
-| --- | --- |
-| `AI_BACKEND`, `AI_CLASSIFY_BACKEND`, `AI_TRANSCRIBE_MODEL` | `ai_backend`, `ai_classify_backend`, `ai_transcribe_model` |
-| `ULAI_LIVE_URL`, `ULAI_LIVE_VOICE`, `ULAI_LIVE_INSECURE`, `ULAI_LIVE_OUTPUT_RATE` | the profile's `ulai_live` settings |
-| `CASCADE_*` | the profile's `cascade` settings |
-| `AMD_ENABLED` | `amd_enabled` |
-| `AUDIO_NOTHING` | `audio_nothing` |
-| `LOST_UTTERANCE_REPLAY` | `lost_utterance_replay` |
-| `GEMINI_PROJECT_ID`, `GEMINI_LIVE_LOCATION` | `gemini_project_id`, `gemini_location` |
-| `GOOGLE_APPLICATION_CREDENTIALS` | `google_credentials_json`. **This engine holds no credentials.** |
+`AI_BACKEND`, `AI_CLASSIFY_BACKEND`, `AI_TRANSCRIBE_MODEL`, `ULAI_LIVE_*`,
+`CASCADE_*`, `AMD_ENABLED`, `AUDIO_NOTHING`, `LOST_UTTERANCE_REPLAY`,
+`GEMINI_PROJECT_ID`, `GEMINI_LIVE_LOCATION`, `GOOGLE_APPLICATION_CREDENTIALS`.
 
-If you are upgrading, move these to the agent client before you deploy the new
-image, and then remove them here. The boot report lists the `AI_*`, `GEMINI_*`,
-`GOOGLE_*` and `ULAI_*` ones on its `NOT READ BY THIS PROCESS` line while they
-are still set.
-
-A field the client leaves unset takes the engine's built-in default — the
-backend is `gemini-live`, the region `us-central1` — and never an environment
-variable. An unknown backend name costs that one call and is reported; the
-other agents on the host carry on.
+Remove them from your deployment. While they are set, the boot report lists the
+`AI_*`, `GEMINI_*`, `GOOGLE_*` and `ULAI_*` ones on its `NOT READ BY THIS
+PROCESS` line.
 
 A call that arrives with no project or no key is refused with a message naming
 the field and both places it can be set. It is *not* quietly run against

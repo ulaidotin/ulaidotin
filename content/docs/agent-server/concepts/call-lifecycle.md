@@ -70,11 +70,6 @@ re-prompt, so the agent keeps talking rather than going silent.
 Every rejection is a prompt, and the engine is careful that rejections do not
 themselves become a source of repetition.
 
-An agent can also be configured never to hang up. The model is then not given
-`end_call` at all, and the call ends when the caller hangs up, the client ends
-it, or the engine's own limits — prolonged silence, the maximum call duration —
-are reached.
-
 ## Detaching is not hanging up
 
 If the client process dies mid-call, the engine carries on. The caller is not

@@ -37,9 +37,6 @@ docker logs agent_server 2>&1 | grep AIRoute | tail -5
 The fix is on the **agent client**, which is the thing that must send a key.
 Nothing you change on this host will help: it holds no credentials by design.
 
-A cascade call says the same thing with `cascade:` in front instead of
-`gemini:`.
-
 ### `this call carried no AI project`
 
 Same shape, other field. The profile named neither a project nor a key.
@@ -68,21 +65,10 @@ see above. If it is present and there is still silence, the caller's side is
 the place to look: the room roster line says whether anyone else is actually
 there.
 
-## A call fails with `is not a known backend`
-
-```
-aibackend: "gemini-liv" is not a known backend
-```
-
-The profile named a backend this image does not have. The known ones are
-`gemini-live`, `google-cascade` and `ulai-live`. It costs only that call; fix
-the name on the client.
-
 ## A setting on this host has no effect
 
 You set `AI_BACKEND`, `AMD_ENABLED`, `AUDIO_NOTHING` or similar here, and calls
-behave as if you had not. They do: those are no longer read from the
-environment. Every call setting comes from the client, on the profile — see
+behave as if you had not. Those are no longer read from the environment — see
 [no longer read](/docs/agent-server/configuration/#no-longer-read).
 
 ## `ONNXRUNTIME_LIB … !! NO SUCH FILE` at boot

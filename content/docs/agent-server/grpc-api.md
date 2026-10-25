@@ -88,9 +88,6 @@ The server also makes connections *out*, which your egress rules must allow:
 | To | For |
 | --- | --- |
 | The Ulai control plane and SFU nodes | joining rooms and carrying audio |
-| Vertex AI (Gemini) | `gemini-live` and `google-cascade` calls |
-| Cloud Speech-to-Text and Text-to-Speech | `google-cascade` calls |
-| The Ulai Live API | `ulai-live` calls |
+| The AI backend (Vertex AI by default; also Cloud Speech-to-Text and Text-to-Speech on cascade calls) | the conversation itself |
 
-Which of these a call uses, and in which region, is named per call by the
-client, not configured here.
+Both are named per call by the client, not configured here.

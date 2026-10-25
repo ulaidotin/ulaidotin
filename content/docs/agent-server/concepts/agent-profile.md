@@ -56,20 +56,12 @@ the logs readable.
 | Group | Examples |
 | --- | --- |
 | **The conversation** | prompt, greeting, closing line, voice, model, language |
-| **Placement** | GCP project, region, service-account key, which AI backend: `gemini-live`, `google-cascade` or `ulai-live` |
-| **Behaviour** | can the caller interrupt, is the greeting interruptible, silence handling, answering-machine detection, whether the model may hang up, context compression |
-| **Backend settings** | for a cascade call, the models, regions and voice of its speech-to-text, model and text-to-speech stages, and how it detects the end of a turn; for `ulai-live`, its host, voice and output rate |
+| **Placement** | GCP project, region, service-account key, which AI vendor |
+| **Behaviour** | can the caller interrupt, is the greeting interruptible, silence handling, answering-machine detection |
 | **Tools** | the functions this agent may call, answered by the client |
 
 Each field falls back on its own. A client sending a project but no region gets
 **that project** in the default region — not a half-configured call.
 
-## Nothing falls back to the environment
-
-A field the profile leaves unset takes the engine's built-in default: the
-`gemini-live` backend, the `us-central1` region, hang-up allowed, context
-compression off. No environment variable on this host changes those defaults —
-settings that once did are listed under
-[no longer read](/docs/agent-server/configuration/#no-longer-read).
-
-The project and the key have **no** default. Those must come from the call.
+No environment variable on this host fills in a field the profile leaves out.
+The project and the key in particular must come from the call.

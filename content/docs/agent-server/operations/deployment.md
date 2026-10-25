@@ -51,12 +51,6 @@ The order:
 
 Reversing it produces a working-looking server and a fleet of refused calls.
 
-The same goes for call settings an older image read from its environment — the
-AI backend, answering-machine detection, the audio switches. Move them to the
-client first. The new image ignores them on the host, so deploying it before
-the client sends them quietly changes how calls run. See
-[no longer read](/docs/agent-server/configuration/#no-longer-read).
-
 ## Sizing
 
 One process handles many concurrent calls; the limit is CPU, and the audio

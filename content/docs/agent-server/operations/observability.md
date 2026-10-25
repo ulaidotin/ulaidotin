@@ -55,27 +55,6 @@ Also at boot:
 or `creds=engine default` — the latter meaning the profile carried none, which
 is a refusal.
 
-A cascade call's `ready` line is where to check what the client actually sent:
-the models and regions of each stage, the voice, the language and how turns are
-detected. Anything the client left unset shows the built-in default.
-
-## On the event stream
-
-How a call went is reported to the agent client as events, not written to this
-log. A client that records them has:
-
-- **How it ended** — on the session-ended event: `ended`, `terminated`,
-  `max_duration`, `no_response`, `voicemail` or `CALL_FAILED`, with latency
-  figures for the call.
-- **What was heard** — how much agent audio reached the caller, for the whole
-  call and for each turn. It differs from wall-clock by every second of
-  silence, ringing and caller speech, and it is the number that reflects what
-  was delivered.
-- **Usage** — tokens as the backend reported them, per model. A cascade call
-  also reports speech-to-text seconds and text-to-speech characters.
-- **Tool outcomes** — how the engine answered the tools it handles itself, such
-  as a refused `end_call`.
-
 ## Audio
 
 When a call's profile sets `audio_nothing`, the chain is cut down to the
