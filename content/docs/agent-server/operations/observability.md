@@ -18,25 +18,24 @@ There are no metrics endpoints. Ship stdout to wherever you keep logs.
 ## At boot
 
 The whole configuration is printed, including variables that are **set but not
-read** — usually a rename:
+read** — usually a rename, or a setting that now travels with the call:
 
 ```
 [env] ---- agent server configuration ----
-[env]   APP_GRPC_LISTEN_PORT   50052   # gRPC port; host is 127.0.0.1
-[env]   ULAI_GRPC_API_KEY      set len=64 sha256:57a4cbf1
-[env]   GEMINI_PROJECT_ID      (unset)   # NOT READ — the client sends it per call
-[env]   NOT READ BY THIS PROCESS: APP_ENV APP_NAME SERVICE_HTTP_PORT
+[env]   APP_GRPC_LISTEN_PORT             50052   # gRPC port, all interfaces
+[env]   ULAI_GRPC_API_KEY                set len=64 sha256:57a4cbf1   # demanded of callers; unset = NO AUTH
+[env]   ONNXRUNTIME_LIB                  /usr/local/lib/libonnxruntime.so (file present)   # Smart Turn and Silero; the image sets it
+[env]   NOT READ BY THIS PROCESS: AI_BACKEND APP_ENV APP_NAME SERVICE_HTTP_PORT
 [env]   (set in the environment but nothing here looks at them — usually a rename)
 [env] ---- end agent server configuration ----
 ```
 
-Secrets are shown as a length and a hash, never a value.
+Secrets are shown as a length and a hash, never a value. A path that names a
+missing file says `!! NO SUCH FILE`.
 
 Also at boot:
 
 ```
-aibackend: realtime = gemini-live (default)
-aibackend: classify = gemini-live (default)
 [grpc] agentsession.v1 listening on [::]:50052 (AgentBridge served; AgentSession/AgentDispatch served)
 ```
 
@@ -45,40 +44,55 @@ aibackend: classify = gemini-live (default)
 | Line | Means |
 | --- | --- |
 | `[bridge] join: bridge=… agent_id=… participant=…` | The agent has a seat. |
-| `[AIRoute] ai_project=… creds=supplied (N bytes)` | The profile carried a key. **The one to check first.** |
+| `[AIRoute] ai_project=… creds=supplied (N bytes) (from the agent profile)` | The profile carried a key. **The one to check first.** |
 | `using the profile supplied with the request` | No database lookup happened. |
 | `[gemini] connected, greeting deferred` | The backend handshake succeeded. |
+| `ready — mode=… llm=…@… tts=…@… …` | A cascade call is up, with every setting it is running on. |
 | `greeting primed` | The agent is about to speak. |
-| `[ulai] roster: N other participant(s) in room` | Who else is there. |
-| `call ended: reason=… duration=…ms played=…ms` | How it ended, and how much was *heard*. |
+| `roster: N other participant(s) in room` | Who else is there. |
 
 `[AIRoute]` never prints a credential. It shows `creds=supplied (2347 bytes)`
 or `creds=engine default` — the latter meaning the profile carried none, which
-is now a refusal.
+is a refusal.
 
-## Turn accounting
+A cascade call's `ready` line is where to check what the client actually sent:
+the models and regions of each stage, the voice, the language and how turns are
+detected. Anything the client left unset shows the built-in default.
 
-`played=…ms` is not `duration=…ms`. It is how much agent audio the caller
-actually heard, and it differs from wall-clock by every second of silence,
-ringing and caller speech. It is the number that reflects what was delivered.
+## On the event stream
 
-The same distinction appears per turn: a turn-ended event carries how much of
-that turn was heard before it was cut.
+How a call went is reported to the agent client as events, not written to this
+log. A client that records them has:
+
+- **How it ended** — on the session-ended event: `ended`, `terminated`,
+  `max_duration`, `no_response`, `voicemail` or `CALL_FAILED`, with latency
+  figures for the call.
+- **What was heard** — how much agent audio reached the caller, for the whole
+  call and for each turn. It differs from wall-clock by every second of
+  silence, ringing and caller speech, and it is the number that reflects what
+  was delivered.
+- **Usage** — tokens as the backend reported them, per model. A cascade call
+  also reports speech-to-text seconds and text-to-speech characters.
+- **Tool outcomes** — how the engine answered the tools it handles itself, such
+  as a refused `end_call`.
 
 ## Audio
 
-With `AUDIO_NOTHING=true` set on this host, the chain is cut down to the
-denoiser and says so loudly:
+When a call's profile sets `audio_nothing`, the chain is cut down to the
+denoiser and the call's log says so loudly:
 
 ```
-[AUDIO] AUDIO_NOTHING=true — pure RNNoise (preprocessor + foreground gate disabled)
+[AUDIO] audio_nothing — pure RNNoise (preprocessor + foreground gate disabled)
 ```
 
 That line in production is almost always a mistake — see
-[configuration](/docs/agent-server/configuration/).
+[troubleshooting](/docs/agent-server/operations/troubleshooting/).
 
 ## Prompts
 
-`PROMPT_LOG=on` logs the system instruction at connect. Useful exactly once,
-when an agent is behaving oddly and you want to see what it was actually told.
-Noisy forever after, and it puts the prompt in your log store.
+`PROMPT_LOG` is on unless set to `off`. Every text turn and tool result sent to
+the model is logged as an `[→AI]` line — the persona, the nudges, the closing
+instruction — which is the only record of what the model was actually told.
+
+Turn it off if prompts or caller details should not reach your log store.
+Audio is never logged either way.

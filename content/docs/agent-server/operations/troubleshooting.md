@@ -37,6 +37,9 @@ docker logs agent_server 2>&1 | grep AIRoute | tail -5
 The fix is on the **agent client**, which is the thing that must send a key.
 Nothing you change on this host will help: it holds no credentials by design.
 
+A cascade call says the same thing with `cascade:` in front instead of
+`gemini:`.
+
 ### `this call carried no AI project`
 
 Same shape, other field. The profile named neither a project nor a key.
@@ -65,15 +68,29 @@ see above. If it is present and there is still silence, the caller's side is
 the place to look: the room roster line says whether anyone else is actually
 there.
 
-## An unknown backend kills the process at boot
+## A call fails with `is not a known backend`
 
 ```
-aibackend: AI_BACKEND="gemini-liv" is not a known backend
+aibackend: "gemini-liv" is not a known backend
 ```
 
-Deliberate. A whole deployment quietly running a vendor nobody asked for is
-worse than refusing to start. The same value in a *request* costs only that
-call.
+The profile named a backend this image does not have. The known ones are
+`gemini-live`, `google-cascade` and `ulai-live`. It costs only that call; fix
+the name on the client.
+
+## A setting on this host has no effect
+
+You set `AI_BACKEND`, `AMD_ENABLED`, `AUDIO_NOTHING` or similar here, and calls
+behave as if you had not. They do: those are no longer read from the
+environment. Every call setting comes from the client, on the profile — see
+[no longer read](/docs/agent-server/configuration/#no-longer-read).
+
+## `ONNXRUNTIME_LIB … !! NO SUCH FILE` at boot
+
+The image sets this to its own copy of ONNX Runtime, so this means it was
+overridden. Cascade calls still run, but without the turn and voice-activity
+models: they fall back to the built-in VAD and end turns on silence alone.
+Remove the override.
 
 ## Calls are refused with `unauthorized`
 
@@ -104,10 +121,9 @@ into a single bubble while the agent's lines appear separately. Upgrade.
 
 ## The caller sounds gated or clipped
 
-Have the client send `audio_nothing` on one call, or set `AUDIO_NOTHING=true`
-on this host to test every call. It strips the chain to the denoiser alone, so
-if the problem disappears it is the pre-clean stage or the near-field
-foreground gate.
+Have the client send `audio_nothing` on one call. It strips the chain to the
+denoiser alone, so if the problem disappears it is the pre-clean stage or the
+near-field foreground gate. There is no host-wide switch for this any more.
 
 It is a **diagnostic**, not a setting. The full chain is the tuned one, and the
 stage it removes is what keeps a noisy room out of the model.

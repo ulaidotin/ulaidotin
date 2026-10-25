@@ -86,24 +86,22 @@ docker logs agent_server 2>&1 | grep -A 25 "agent server configuration"
 
 ```
 [env] ---- agent server configuration ----
-[env]   APP_GRPC_LISTEN_PORT   50052   # gRPC port; host is 127.0.0.1
-[env]   APP_HTTP_PORT          8000    # health only
-[env]   ULAI_GRPC_API_KEY      set len=64 sha256:57a4cbf1
-[env]   GEMINI_PROJECT_ID      (unset) # NOT READ — the client sends it per call
+[env]   APP_GRPC_LISTEN_PORT             50052   # gRPC port, all interfaces
+[env]   APP_HTTP_PORT                    8000   # health only
+[env]   ULAI_GRPC_API_KEY                set len=64 sha256:57a4cbf1   # demanded of callers; unset = NO AUTH
+[env]   ONNXRUNTIME_LIB                  /usr/local/lib/libonnxruntime.so (file present)   # Smart Turn and Silero; the image sets it
 [env] ---- end agent server configuration ----
-[grpc] agentsession.v1 listening on [::]:50052
+[grpc] agentsession.v1 listening on [::]:50052 (AgentBridge served; AgentSession/AgentDispatch served)
 ```
 
-Three things to confirm:
+Four things to confirm:
 
 | Check | Why |
 | --- | --- |
 | `ULAI_GRPC_API_KEY  set len=64` | If it says `(unset)`, **anyone who reaches the port can control calls.** |
-| The `GEMINI_*` lines say `NOT READ` | Correct. Those arrive per call. |
+| `ONNXRUNTIME_LIB … (file present)` | The turn and voice-activity models cascade calls use are in place. |
+| No `NOT READ BY THIS PROCESS` line | Anything listed there is set on this host and ignored — usually a rename, or a setting that now travels with the call. |
 | `[grpc] … listening` | The control port is up. |
-
-The log also prints any variable that is set but nothing reads — usually a
-rename, and worth a look.
 
 ## 4. Point a client at it
 
@@ -131,9 +129,9 @@ A healthy call looks like this:
 
 ```
 [bridge] join: bridge=48c7ad… agent_id=d1a6b0… participant=agent_7f85…
-[AIRoute] ai_project=my-project location=us-central1 creds=supplied (2347 bytes)
+[AIRoute] ai_project=my-project location=us-central1 creds=supplied (2347 bytes) (from the agent profile)
 [bridge:48c7ad…] using the profile supplied with the request — no agent lookup, no database
-[gemini] connected, greeting deferred (model=… voice=Kore)
+[gemini] connected, greeting deferred (call=… model=… voice=Kore)
 [bridge:48c7ad…] greeting primed
 ```
 
@@ -143,6 +141,9 @@ Two lines are the ones to know:
   `creds=engine default`, the client sent none and the call will be refused.
 - **`greeting primed`** — the backend connected and the agent is about to
   speak. If this never appears, the call died before it could talk.
+
+A call on the cascade backend prints a `ready — mode=… llm=… tts=…` line in
+place of `[gemini] connected`, listing every setting it is running on.
 
 ## Upgrading
 

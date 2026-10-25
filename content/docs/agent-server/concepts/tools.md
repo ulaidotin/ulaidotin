@@ -47,6 +47,9 @@ It is answered instantly, inside the server, precisely because sending it out
 and back would spend a multi-second silence avoiding a mistake that costs
 nothing.
 
+An agent configured never to hang up is not given `end_call`. If its model
+calls it anyway, the server refuses it and the call carries on.
+
 ## In the logs
 
 Tool activity appears against the call's bridge id. A call that pauses oddly,
